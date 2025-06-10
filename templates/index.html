@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>💬 Chat One Piece</title>
+  <!-- Google Font for One Piece feel -->
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #f7f1e3;
+      --panel-bg: rgba(255, 255, 255, 0.9);
+      --accent-color: #ffd700;
+      --primary-color: #2c3e50;
+      --secondary-color: #e74c3c;
+      --user-bubble: #74b9ff;
+      --bot-bubble: #ffeaa7;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Arial', sans-serif;
+      background: url('https://www.einerd.com/wp-content/uploads/2024/12/One-Piece-Chapeus-de-Palha-277x190.jpg') center/cover no-repeat;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      color: var(--primary-color);
+    }
+    header {
+      background: rgba(0, 0, 0, 0.6);
+      color: var(--accent-color);
+      font-family: 'Pirata One', cursive;
+      font-size: 2rem;
+      text-align: center;
+      padding: 1rem;
+      text-shadow: 2px 2px var(--secondary-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    header::before {
+      content: '';
+      background: url('https://i.imgur.com/0Z8Y2eI.png') no-repeat center;
+      background-size: 2rem;
+      width: 2rem;
+      height: 2rem;
+      margin-right: 0.5rem;
+    }
+    #chat-container {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      background: var(--panel-bg);
+      border-top: 4px solid var(--accent-color);
+      border-bottom: 4px solid var(--accent-color);
+      backdrop-filter: blur(4px);
+      position: relative;
+    }
+    /* Custom scrollbar */
+    #chat-container::-webkit-scrollbar {
+      width: 8px;
+    }
+    #chat-container::-webkit-scrollbar-thumb {
+      background: var(--secondary-color);
+      border-radius: 4px;
+    }
+    .message-wrapper {
+      display: flex;
+      margin-bottom: 1rem;
+      align-items: flex-end;
+    }
+    .message-wrapper.user { justify-content: flex-end; }
+    .message-wrapper.bot { justify-content: flex-start; }
+    .message {
+      max-width: 70%;
+      padding: 0.75rem 1rem;
+      border-radius: 1rem;
+      position: relative;
+      line-height: 1.4;
+    }
+    .user .message {
+      background: var(--user-bubble);
+      color: #fff;
+      border-bottom-right-radius: 0.25rem;
+      border-bottom-left-radius: 1rem;
+    }
+    .bot .message {
+      background: var(--bot-bubble);
+      color: var(--primary-color);
+      border-bottom-left-radius: 0.25rem;
+      border-bottom-right-radius: 1rem;
+    }
+    .avatar {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      margin: 0 0.5rem;
+      object-fit: cover;
+    }
+    #input-area {
+      display: flex;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.9);
+      border-top: 4px solid var(--accent-color);
+      backdrop-filter: blur(4px);
+    }
+    #input-area input {
+      flex: 1;
+      padding: 0.75rem;
+      border: 2px solid var(--secondary-color);
+      border-radius: 2rem;
+      font-size: 1rem;
+      outline: none;
+      font-family: inherit;
+    }
+    #input-area button {
+      margin-left: 0.5rem;
+      padding: 0 1.5rem;
+      background: var(--secondary-color);
+      color: #fff;
+      border: none;
+      border-radius: 2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform 0.1s;
+    }
+    #input-area button:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <header>💬 Chat One Piece</header>
+
+  <div id="chat-container"></div>
+
+  <div id="input-area">
+    <input
+      type="text"
+      id="pergunta"
+      placeholder="Faça sua pergunta sobre One Piece..."
+      autocomplete="off"
+    />
+    <button id="enviar">Enviar</button>
+  </div>
+
+  <script>
+    const chatContainer = document.getElementById('chat-container');
+    const inputPergunta = document.getElementById('pergunta');
+    const btnEnviar = document.getElementById('enviar');
+
+    function appendMessage(text, sender) {
+      const wrapper = document.createElement('div');
+      wrapper.classList.add('message-wrapper', sender);
+
+      const avatar = document.createElement('img');
+      avatar.classList.add('avatar');
+      avatar.src = sender === 'user'
+        ? 'https://avatarfiles.alphacoders.com/375/thumb-350-375473.webp' // Luffy avatar
+        : 'https://i.pinimg.com/474x/c0/c7/1b/c0c71bcadc86be5ea1c9193e71e3b05a.jpg'; // Chopper avatar
+
+      const msg = document.createElement('div');
+      msg.classList.add('message');
+      msg.innerHTML = text.replace(/\n/g, '<br/>');
+
+      if (sender === 'bot') {
+        wrapper.appendChild(avatar);
+        wrapper.appendChild(msg);
+      } else {
+        wrapper.appendChild(msg);
+        wrapper.appendChild(avatar);
+      }
+
+      chatContainer.appendChild(wrapper);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    async function enviarPergunta() {
+      const pergunta = inputPergunta.value.trim();
+      if (!pergunta) return;
+      appendMessage(pergunta, 'user');
+      inputPergunta.value = '';
+      try {
+        const resp = await fetch('/perguntar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pergunta })
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+          appendMessage(data.resposta, 'bot');
+        } else {
+          appendMessage(`<em>Erro: ${data.erro}</em>`, 'bot');
+        }
+      } catch (err) {
+        appendMessage(`<em>Erro de conexão</em>`, 'bot');
+      }
+    }
+
+    btnEnviar.addEventListener('click', enviarPergunta);
+    inputPergunta.addEventListener('keypress', e => {
+      if (e.key === 'Enter') enviarPergunta();
+    });
+  </script>
+</body>
+</html>

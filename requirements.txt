@@ -1,0 +1,7 @@
+Flask>=2.0
+python-dotenv
+google-generativeai
+langchain
+langchain-google-genai
+langchain-community
+faiss-cpu
